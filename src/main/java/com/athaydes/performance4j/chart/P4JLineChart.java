@@ -1,5 +1,6 @@
 package com.athaydes.performance4j.chart;
 
+import com.athaydes.performance4j.transform.Smooth;
 import com.athaydes.performance4j.transform.Transform;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,7 @@ import javafx.scene.chart.XYChart;
 
 public class P4JLineChart implements P4JChart {
 
-    private Transform transform = Transform.noOp();
+    private Transform transform = new Smooth(100);
     private final NumberAxis xAxis = new NumberAxis();
     private final NumberAxis yAxis = new NumberAxis();
     private final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
@@ -48,7 +49,7 @@ public class P4JLineChart implements P4JChart {
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         series.setName(data.seriesName());
         ObservableList<XYChart.Data<Number, Number>> seriesData = series.getData();
-        for (XYChart.Data<Number, Number> datum : data) {
+        for (XYChart.Data<Number, Number> datum : transform.apply(data)) {
             seriesData.add(datum);
         }
         seriesByData.put(data, series);
