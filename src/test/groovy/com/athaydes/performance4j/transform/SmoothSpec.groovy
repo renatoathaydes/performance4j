@@ -1,5 +1,7 @@
 package com.athaydes.performance4j.transform
 
+import com.athaydes.performance4j.Performance4j
+import com.athaydes.performance4j.chart.ChartType
 import com.athaydes.performance4j.chart.DataSeries
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -57,6 +59,32 @@ class SmoothSpec extends Specification {
          14L, 16L, 18L, 20L, 22L, 24L]  | 4         | [4L, 10L, 16L, 22L]
         [2L, 4L, 6L, 8L, 10L, 12L, 14L,
          16L, 18L, 20L, 22L, 24L, 26L]  | 4         | [5L, 13L, 21L, 26L]
+    }
+
+    def "Should be able to save data in chart headless"() {
+        given: 'random data to be stored in charts'
+        def randomData = {
+            final rand = new Random()
+            long[] data = new long[100]
+            (0..<100).each { i ->
+                data[i] = 10L * rand.nextInt(100)
+            }
+            data
+        }
+
+        when: 'Performance4j saves the data in a file'
+        def tempDir = File.createTempDir()
+        def chartFile = new File(tempDir, 'my-chart.png')
+        Performance4j.saveAsChart(ChartType.LINE_CHART, chartFile, [
+                new DataSeries('hello', randomData()),
+                new DataSeries('other', randomData()),
+        ])
+
+        then: 'no error should occur'
+        noExceptionThrown()
+
+        and: 'the file should exist'
+        chartFile.exists()
     }
 
     static long[] toLongArray(List items) {

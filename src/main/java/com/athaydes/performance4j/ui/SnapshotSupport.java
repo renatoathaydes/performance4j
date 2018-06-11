@@ -1,7 +1,8 @@
 package com.athaydes.performance4j.ui;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.stage.FileChooser;
@@ -20,22 +21,27 @@ public final class SnapshotSupport {
         chooser.setTitle("Select a location to save the file");
         File file = chooser.showSaveDialog(owner);
         if (file != null) {
-            String extension = extensionOf(file.getName());
-            node.snapshot(snapshot -> {
-                try {
-                    BufferedImage rendered = SwingFXUtils.fromFXImage(snapshot.getImage(), null);
-                    if (rendered == null) {
-                        System.err.println("Image could not be created");
-                    } else {
-                        ImageIO.write(rendered, extension, file);
-                    }
-                } catch (Exception e) {
-                    // TODO show error to the user
-                    e.printStackTrace();
-                }
-                return null;
-            }, null, null);
+            Queue snapshotResult = new ArrayDeque(1);
+            takeSnapshot(node, file, snapshotResult);
+            // TODO check result
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void takeSnapshot(Node node, File file, Queue resultDequeue) {
+        String extension = extensionOf(file.getName());
+        node.snapshot(snapshot -> {
+            try {
+                ImageIO.write(SwingFXUtils.fromFXImage(snapshot.getImage(), null), extension, file);
+            } catch (Exception e) {
+                resultDequeue.offer(e);
+            } finally {
+                if (resultDequeue != null) {
+                    resultDequeue.offer(true);
+                }
+            }
+            return null;
+        }, null, null);
     }
 
     private static String extensionOf(String name) {
