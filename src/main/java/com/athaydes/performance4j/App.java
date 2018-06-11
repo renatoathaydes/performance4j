@@ -1,10 +1,12 @@
 package com.athaydes.performance4j;
 
 
-import com.athaydes.performance4j.chart.P4JChart;
-import com.athaydes.performance4j.chart.P4JLineChart;
+import com.athaydes.performance4j.chart.DataSeries;
+import com.athaydes.performance4j.ui.ChartTypeSelector;
 import java.util.function.Consumer;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -25,22 +27,25 @@ public class App extends Application {
     public void start(Stage stage) {
         stage.setTitle("Performance4J");
 
-        P4JChart chart = new P4JLineChart();
-
         HBox buttonBox = new HBox(4);
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(10));
 
+        ObservableList<DataSeries> dataSeries = FXCollections.observableArrayList();
+
         Button addSeries = new Button("Add Series");
-        addSeries.setOnAction(event -> requestUserRawData(stage, chart));
+        addSeries.setOnAction(event -> requestUserRawData(stage, dataSeries));
 
         Button clearData = new Button("Clear");
-        clearData.setOnAction(event -> chart.clear());
-
-        buttonBox.getChildren().addAll(addSeries, clearData);
+        clearData.setOnAction(event -> dataSeries.clear());
 
         VBox chartBox = new VBox(4);
-        chartBox.getChildren().addAll(chart.getNode());
+
+        ChartTypeSelector chartTypeSelector = new ChartTypeSelector(newChart -> {
+            chartBox.getChildren().setAll(newChart.getNodeWith("Data", dataSeries));
+        });
+
+        buttonBox.getChildren().addAll(addSeries, clearData, chartTypeSelector);
 
         topBox.setTop(new ScrollPane(buttonBox));
         topBox.setCenter(chartBox);

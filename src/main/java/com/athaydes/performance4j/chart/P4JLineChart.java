@@ -2,9 +2,7 @@ package com.athaydes.performance4j.chart;
 
 import com.athaydes.performance4j.transform.Smooth;
 import com.athaydes.performance4j.transform.Transform;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import javafx.beans.InvalidationListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
@@ -14,61 +12,40 @@ import javafx.scene.chart.XYChart;
 public class P4JLineChart implements P4JChart {
 
     private Transform transform = new Smooth(100);
-    private final NumberAxis xAxis = new NumberAxis();
-    private final NumberAxis yAxis = new NumberAxis();
-    private final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
 
-    private final Map<IntoData, XYChart.Series<Number, Number>> seriesByData = new HashMap<>();
-
-    public P4JLineChart() {
+    @Override
+    public Node getNodeWith(String title, ObservableList<DataSeries> data) {
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Run");
         yAxis.setLabel("Time");
-    }
 
-    public void setTitle(String title) {
-        if (title == null) {
-            title = "";
-        }
+        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(title);
-    }
 
-    public void setTransform(Transform transform) {
-        if (transform == null) {
-            transform = Transform.noOp();
-        }
-        this.transform = transform;
-    }
+        Runnable rebuildSeries = () -> {
+            for (DataSeries datum : data) {
+                XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                DataSeries dataSeries = transform.apply(datum);
+                series.setName(dataSeries.getName());
+                ObservableList<XYChart.Data<Number, Number>> seriesData = series.getData();
+                int i = 0;
+                for (long dataPoint : dataSeries.getData()) {
+                    seriesData.add(new XYChart.Data<>(i, dataPoint));
+                    i++;
+                }
+                lineChart.getData().add(series);
+            }
+        };
 
-    public void setAxisLabels(String xLabel, String yLabel) {
-        xAxis.setLabel(xLabel);
-        yAxis.setLabel(yLabel);
-    }
+        rebuildSeries.run();
+        data.addListener((InvalidationListener) observable -> {
+            lineChart.getData().clear();
+            rebuildSeries.run();
+        });
 
-    @Override
-    public void add(IntoData data) {
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        series.setName(data.seriesName());
-        ObservableList<XYChart.Data<Number, Number>> seriesData = series.getData();
-        for (XYChart.Data<Number, Number> datum : transform.apply(data)) {
-            seriesData.add(datum);
-        }
-        seriesByData.put(data, series);
-        lineChart.getData().add(series);
-    }
-
-    @Override
-    public void remove(IntoData data) {
-        Optional.ofNullable(seriesByData.get(data)).ifPresent(s -> lineChart.getData().remove(s));
-    }
-
-    @Override
-    public void clear() {
-        lineChart.getData().clear();
-    }
-
-    @Override
-    public Node getNode() {
         return lineChart;
     }
+
 
 }

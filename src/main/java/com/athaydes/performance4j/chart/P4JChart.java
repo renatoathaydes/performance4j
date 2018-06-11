@@ -1,13 +1,10 @@
 package com.athaydes.performance4j.chart;
 
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
 public interface P4JChart {
-    void add(IntoData data);
 
-    void remove(IntoData data);
+    Node getNodeWith(String title, ObservableList<DataSeries> data);
 
-    void clear();
-
-    Node getNode();
 }

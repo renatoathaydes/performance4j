@@ -1,6 +1,6 @@
 package com.athaydes.performance4j.transform
 
-import com.athaydes.performance4j.chart.IntoData
+import com.athaydes.performance4j.chart.DataSeries
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -9,10 +9,13 @@ class SmoothSpec extends Specification {
     @Unroll
     def "Should be able to smoothen data points to fit into charts"() {
         when: 'the data is smoothened'
-        def result = new Smooth(maxPoints).apply(toLongArrayData(data))
+        def result = new Smooth(maxPoints).apply(new DataSeries('origin', toLongArray(data)))
 
         then: 'the result should be correctly smoothened data'
-        result.data == toLongArrayData(smoothenedData).data
+        result.data == toLongArray(smoothenedData)
+
+        and: 'the name should have the (smooth) suffix'
+        result.name == 'origin (smooth)'
 
         where:
         data                            | maxPoints | smoothenedData
@@ -56,12 +59,12 @@ class SmoothSpec extends Specification {
          16L, 18L, 20L, 22L, 24L, 26L]  | 4         | [5L, 13L, 21L, 26L]
     }
 
-    static IntoData.LongArrayIntoData toLongArrayData(List items) {
+    static long[] toLongArray(List items) {
         long[] result = new long[items.size()]
         for (int i = 0; i < items.size(); i++) {
             result[i] = (long) items.get(i)
         }
-        new IntoData.LongArrayIntoData('', result)
+        result
     }
 
 }

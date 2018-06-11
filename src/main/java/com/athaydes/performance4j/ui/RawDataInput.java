@@ -1,9 +1,9 @@
 package com.athaydes.performance4j.ui;
 
-import com.athaydes.performance4j.chart.IntoData;
-import com.athaydes.performance4j.chart.P4JChart;
+import com.athaydes.performance4j.chart.DataSeries;
 import java.io.StringReader;
 import java.util.Scanner;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,7 +25,7 @@ import static com.athaydes.performance4j.App.with;
 
 public class RawDataInput {
 
-    public static void requestUserRawData(Window owner, P4JChart chart) {
+    public static void requestUserRawData(Window owner, ObservableList<DataSeries> data) {
         Stage dialog = new Stage(StageStyle.UNDECORATED);
         dialog.setTitle("Enter raw data");
         dialog.initOwner(owner);
@@ -54,10 +54,10 @@ public class RawDataInput {
             dialog.hide();
 
             ProgressBar progressBar = new ProgressBar();
-            Task<IntoData> generateData = new ChartUpdater(name.getText(), input.getText());
+            Task<DataSeries> generateData = new ChartUpdater(name.getText(), input.getText());
             generateData.setOnSucceeded(e -> {
-                IntoData intoData = (IntoData) e.getSource().getValue();
-                chart.add(intoData);
+                DataSeries dataSeries = (DataSeries) e.getSource().getValue();
+                data.add(dataSeries);
             });
             generateData.setOnFailed(e -> {
                 // TODO show user why
@@ -84,19 +84,19 @@ public class RawDataInput {
         dialog.show();
     }
 
-    private static class ChartUpdater extends Task<IntoData> {
+    private static class ChartUpdater extends Task<DataSeries> {
 
         private final String name;
         private final String text;
 
-        public ChartUpdater(String name, String text) {
+        ChartUpdater(String name, String text) {
             this.name = name;
             this.text = text;
             updateMessage("Parsing data...");
         }
 
         @Override
-        protected IntoData call() {
+        protected DataSeries call() {
             Scanner scanner = new Scanner(new StringReader(text));
             scanner.useDelimiter("\\s*,\\s*");
             int size = (int) text.codePoints().filter(c -> c == ',').count() + 1;
@@ -112,7 +112,7 @@ public class RawDataInput {
                     updateProgress(i, size);
                 }
             }
-            return new IntoData.LongArrayIntoData(name, data);
+            return new DataSeries(name, data);
         }
     }
 

@@ -1,10 +1,10 @@
 package com.athaydes.performance4j.transform;
 
-import com.athaydes.performance4j.chart.IntoData;
+import com.athaydes.performance4j.chart.DataSeries;
 
 @FunctionalInterface
 public interface Transform {
-    IntoData apply(IntoData data);
+    DataSeries apply(DataSeries data);
 
     static Transform noOp() {
         return (data) -> data;

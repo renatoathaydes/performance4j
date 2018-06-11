@@ -1,6 +1,6 @@
 package com.athaydes.performance4j.transform;
 
-import com.athaydes.performance4j.chart.IntoData;
+import com.athaydes.performance4j.chart.DataSeries;
 import java.util.stream.LongStream;
 
 public class Smooth implements Transform {
@@ -21,17 +21,13 @@ public class Smooth implements Transform {
     }
 
     @Override
-    public IntoData apply(IntoData intoData) {
-        long[] data;
-        Object rawData = intoData.getData();
-        if (rawData instanceof long[]) {
-            data = (long[]) rawData;
-        } else {
-            return intoData;
-        }
+    public DataSeries apply(DataSeries dataSeries) {
+        long[] data = dataSeries.getData();
+
         if (data.length <= maxPoints) {
-            return intoData;
+            return dataSeries;
         }
+
         int pointsPerPartition = data.length / maxPoints;
         int partitions = maxPoints;
         int lastPartitionSize = 0;
@@ -64,7 +60,7 @@ public class Smooth implements Transform {
             result[resultIndex] = smoothFunction.smoothen(partition);
         }
 
-        return new IntoData.LongArrayIntoData(intoData.seriesName(), result);
+        return new DataSeries(dataSeries.getName() + " (smooth)", result);
     }
 
     public interface SmoothFunction {
@@ -77,4 +73,5 @@ public class Smooth implements Transform {
             return Math.round(LongStream.of(data).average().orElse(0D));
         }
     }
+
 }
