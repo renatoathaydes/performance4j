@@ -3,12 +3,14 @@ package com.athaydes.performance4j;
 
 import com.athaydes.performance4j.chart.DataSeries;
 import com.athaydes.performance4j.ui.ChartTypeSelector;
+import com.athaydes.performance4j.ui.SnapshotSupport;
 import java.util.function.Consumer;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
@@ -39,13 +41,17 @@ public class App extends Application {
         Button clearData = new Button("Clear");
         clearData.setOnAction(event -> dataSeries.clear());
 
+        Button takeSnapshot = new Button("Save as picture");
+
         VBox chartBox = new VBox(4);
 
         ChartTypeSelector chartTypeSelector = new ChartTypeSelector(newChart -> {
-            chartBox.getChildren().setAll(newChart.getNodeWith("Data", dataSeries));
+            Node chart = newChart.getNodeWith("Data", dataSeries);
+            takeSnapshot.setOnAction(event -> SnapshotSupport.takeSnapshot(stage, chart));
+            chartBox.getChildren().setAll(chart);
         });
 
-        buttonBox.getChildren().addAll(addSeries, clearData, chartTypeSelector);
+        buttonBox.getChildren().addAll(addSeries, clearData, chartTypeSelector, takeSnapshot);
 
         topBox.setTop(new ScrollPane(buttonBox));
         topBox.setCenter(chartBox);

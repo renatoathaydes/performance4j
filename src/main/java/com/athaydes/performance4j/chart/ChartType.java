@@ -2,8 +2,8 @@ package com.athaydes.performance4j.chart;
 
 public enum ChartType {
 
-    BAR_CHART("Bar Chart", new P4JBarChart()),
-    LINE_CHART("Line Chart", new P4JLineChart());
+    LINE_CHART("Line Chart", new P4JLineChart()),
+    BAR_CHART("Bar Chart", new P4JBarChart());
 
     private final String name;
     private P4JChart chart;
