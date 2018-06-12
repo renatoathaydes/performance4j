@@ -1,20 +1,67 @@
-.main-box {
-
-}
+# Colors from http://www.color-hex.com/color-palettes/
 
 .root {
     -fx-focus-color: lightgray;
     -fx-faint-focus-color: lightgray;
+    -fx-font-family: "Gill Sans", sans-serif;
+    -fx-font-size: 15px;
+}
+
+.main-box {
+    -fx-background-color: white;
+}
+
+.main-buttons-pane {
+
+}
+
+.buttons-box {
+    -fx-background-color: #f390f4;
 }
 
 .button {
+    -fx-background-color: #dbf6f4;
     -fx-background-insets: 0,1,2,3;
     -fx-background-radius: 3,2,2,2;
     -fx-padding: 12 30 12 30;
-    -fx-text-fill: black;
-    -fx-font-size: 12px;
 }
 
+.button:hover, .choice-box:hover {
+    -fx-background-color: #cce6ff;
+}
 .choice-box {
-    -fx-padding: 5 5 5 5;
+    -fx-background-color: #dbf6f4;
+    -fx-padding: 6 5 6 5;
+}
+
+.chart-legend {
+   -fx-background-color:  transparent;
+   -fx-padding: 20px;
+}
+
+.chart-legend-item-symbol {
+   -fx-background-radius: 5;
+   -fx-stroke-width: 3;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #191970;
+}
+
+.chart-plot-background {
+    -fx-background-color: #dbf6f4;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: #3278fa;
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: #3278fa;
+}
+
+.chart-alternative-row-fill {
+    -fx-fill: #c0b7ff;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
 }
