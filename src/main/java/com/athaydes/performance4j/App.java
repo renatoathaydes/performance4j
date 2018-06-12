@@ -4,8 +4,12 @@ package com.athaydes.performance4j;
 import com.athaydes.performance4j.chart.DataSeries;
 import com.athaydes.performance4j.ui.ChartTypeSelector;
 import com.athaydes.performance4j.ui.SnapshotSupport;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -30,7 +34,8 @@ public class App extends Application {
         stage.setTitle("Performance4J");
 
         HBox buttonBox = new HBox(4);
-        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getStyleClass().add("buttons-box");
+        buttonBox.setAlignment(Pos.BASELINE_LEFT);
         buttonBox.setPadding(new Insets(10));
 
         ObservableList<DataSeries> dataSeries = FXCollections.observableArrayList();
@@ -53,15 +58,40 @@ public class App extends Application {
 
         buttonBox.getChildren().addAll(addSeries, clearData, chartTypeSelector, takeSnapshot);
 
-        topBox.setTop(new ScrollPane(buttonBox));
+        topBox.setTop(with(new BorderPane(buttonBox),
+                b -> b.getStyleClass().add("main-buttons-pane")));
         topBox.setCenter(chartBox);
         topBox.getStyleClass().add("main-box");
 
+
         Scene scene = new Scene(topBox, 800, 600);
-        scene.getStylesheets().add("com/athaydes/performance4j/css/main.css");
+
+        String stylesheet = getParameters().getNamed().getOrDefault("stylesheet",
+                "com/athaydes/performance4j/css/main.css");
+        System.out.println("Using stylesheet " + stylesheet);
+        scene.getStylesheets().add(stylesheet);
+
+        if (stylesheet.startsWith("file:")) {
+            // FIXME crude way to refresh stylesheet periodically
+            scheduleRepeating(() -> {
+                scene.getStylesheets().remove(stylesheet);
+                scene.getStylesheets().add(stylesheet);
+            });
+        }
 
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void scheduleRepeating(Runnable action) {
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            t.setName("performance4j-repeating-action");
+            return t;
+        });
+        executorService.scheduleAtFixedRate(() ->
+                Platform.runLater(action), 3L, 3L, TimeUnit.SECONDS);
     }
 
     public static <T> T with(T thing, Consumer<T> takeThing) {
