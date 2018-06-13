@@ -4,9 +4,9 @@ package com.athaydes.performance4j;
 import com.athaydes.performance4j.chart.DataSeries;
 import com.athaydes.performance4j.ui.ChartTypeSelector;
 import com.athaydes.performance4j.ui.SnapshotSupport;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -17,7 +17,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -27,6 +26,7 @@ import static com.athaydes.performance4j.ui.RawDataInput.requestUserRawData;
 
 public class App extends Application {
 
+    public static final String DEFAULT_SPREADSHEET = "com/athaydes/performance4j/css/main.css";
     private final BorderPane topBox = new BorderPane();
 
     @Override
@@ -66,32 +66,38 @@ public class App extends Application {
 
         Scene scene = new Scene(topBox, 800, 600);
 
-        String stylesheet = getParameters().getNamed().getOrDefault("stylesheet",
-                "com/athaydes/performance4j/css/main.css");
+        String stylesheetArg = getParameters().getNamed().getOrDefault("stylesheet", DEFAULT_SPREADSHEET);
+
+        URI stylesheetURI = null;
+        if (stylesheetArg != DEFAULT_SPREADSHEET) {
+            stylesheetURI = new File(stylesheetArg).toURI();
+        }
+
+        final String stylesheet = stylesheetURI == null ? stylesheetArg : stylesheetURI.toString();
         System.out.println("Using stylesheet " + stylesheet);
         scene.getStylesheets().add(stylesheet);
 
-        if (stylesheet.startsWith("file:")) {
-            // FIXME crude way to refresh stylesheet periodically
-            scheduleRepeating(() -> {
-                scene.getStylesheets().remove(stylesheet);
-                scene.getStylesheets().add(stylesheet);
-            });
+        boolean watchStylesheet = getParameters().getUnnamed().contains("-w");
+
+        if (watchStylesheet && stylesheetURI != null) {
+            System.out.println("Watching stylesheet for changes");
+            Thread watcher = new Thread(new StylesheetWatcher(Paths.get(stylesheetURI), () -> {
+                if (new File(stylesheetArg).exists()) {
+                    Platform.runLater(() -> {
+                        scene.getStylesheets().remove(stylesheet);
+                        scene.getStylesheets().add(stylesheet);
+                    });
+                } else {
+                    System.err.println("Stylesheet not found: " + stylesheetArg);
+                }
+            }));
+            watcher.setDaemon(true);
+            watcher.setName("stylesheet-watcher");
+            watcher.start();
         }
 
         stage.setScene(scene);
         stage.show();
-    }
-
-    private void scheduleRepeating(Runnable action) {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            t.setName("performance4j-repeating-action");
-            return t;
-        });
-        executorService.scheduleAtFixedRate(() ->
-                Platform.runLater(action), 3L, 3L, TimeUnit.SECONDS);
     }
 
     public static <T> T with(T thing, Consumer<T> takeThing) {
