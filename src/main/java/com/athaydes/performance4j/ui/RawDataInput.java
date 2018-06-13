@@ -25,7 +25,8 @@ import static com.athaydes.performance4j.App.with;
 
 public class RawDataInput {
 
-    public static void requestUserRawData(Window owner, ObservableList<DataSeries> data) {
+    public static void requestUserRawData(Window owner, ObservableList<DataSeries> data,
+                                          String stylesheet) {
         Stage dialog = new Stage(StageStyle.UNDECORATED);
         dialog.setTitle("Enter raw data");
         dialog.initOwner(owner);
@@ -65,12 +66,12 @@ public class RawDataInput {
             });
             progressBar.progressProperty().bind(generateData.progressProperty());
             new Thread(generateData).start();
-            ProgressBarPopup.showPopup(owner, progressBar, generateData);
+            ProgressBarPopup.showPopup(owner, progressBar, generateData, stylesheet);
         });
 
         dialog.setScene(with(new Scene(box), s -> {
             s.getStylesheets().addAll(
-                    "com/athaydes/performance4j/css/main.css",
+                    stylesheet,
                     "com/athaydes/performance4j/css/data-input.css");
             box.getStyleClass().add("data-input");
         }));

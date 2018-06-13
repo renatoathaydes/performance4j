@@ -16,7 +16,8 @@ import static com.athaydes.performance4j.App.with;
 
 final class ProgressBarPopup {
 
-    static void showPopup(Window owner, ProgressBar progressBar, Task<?> task) {
+    static void showPopup(Window owner, ProgressBar progressBar, Task<?> task,
+                          String stylesheet) {
         Stage dialog = new Stage(StageStyle.UNDECORATED);
         dialog.initOwner(owner);
 
@@ -40,9 +41,7 @@ final class ProgressBarPopup {
         box.setPadding(new Insets(10));
         box.getChildren().addAll(label, progressBar, cancel);
 
-        dialog.setScene(with(new Scene(box), s -> {
-            s.getStylesheets().add("com/athaydes/performance4j/css/main.css");
-        }));
+        dialog.setScene(with(new Scene(box), s -> s.getStylesheets().add(stylesheet)));
         dialog.centerOnScreen();
         dialog.show();
     }

@@ -32,6 +32,25 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         stage.setTitle("Performance4J");
+        Scene scene = new Scene(topBox, 800, 600);
+
+        String stylesheetArg = getParameters().getNamed().getOrDefault("stylesheet", DEFAULT_SPREADSHEET);
+
+        URI stylesheetURI = null;
+        //noinspection StringEquality
+        if (stylesheetArg != DEFAULT_SPREADSHEET) {
+            stylesheetURI = new File(stylesheetArg).toURI();
+        }
+
+        final String stylesheet = stylesheetURI == null ? stylesheetArg : stylesheetURI.toString();
+        System.out.println("Using stylesheet " + stylesheet);
+        scene.getStylesheets().add(stylesheet);
+
+        boolean watchStylesheet = getParameters().getUnnamed().contains("-w");
+
+        if (watchStylesheet && stylesheetURI != null) {
+            startWatchingStylesheet(scene, stylesheetArg, stylesheetURI, stylesheet);
+        }
 
         HBox buttonBox = new HBox(4);
         buttonBox.getStyleClass().add("buttons-box");
@@ -41,7 +60,7 @@ public class App extends Application {
         ObservableList<DataSeries> dataSeries = FXCollections.observableArrayList();
 
         Button addSeries = new Button("Add Series");
-        addSeries.setOnAction(event -> requestUserRawData(stage, dataSeries));
+        addSeries.setOnAction(event -> requestUserRawData(stage, dataSeries, stylesheet));
 
         Button clearData = new Button("Clear");
         clearData.setOnAction(event -> dataSeries.clear());
@@ -63,41 +82,26 @@ public class App extends Application {
         topBox.setCenter(chartBox);
         topBox.getStyleClass().add("main-box");
 
-
-        Scene scene = new Scene(topBox, 800, 600);
-
-        String stylesheetArg = getParameters().getNamed().getOrDefault("stylesheet", DEFAULT_SPREADSHEET);
-
-        URI stylesheetURI = null;
-        if (stylesheetArg != DEFAULT_SPREADSHEET) {
-            stylesheetURI = new File(stylesheetArg).toURI();
-        }
-
-        final String stylesheet = stylesheetURI == null ? stylesheetArg : stylesheetURI.toString();
-        System.out.println("Using stylesheet " + stylesheet);
-        scene.getStylesheets().add(stylesheet);
-
-        boolean watchStylesheet = getParameters().getUnnamed().contains("-w");
-
-        if (watchStylesheet && stylesheetURI != null) {
-            System.out.println("Watching stylesheet for changes");
-            Thread watcher = new Thread(new StylesheetWatcher(Paths.get(stylesheetURI), () -> {
-                if (new File(stylesheetArg).exists()) {
-                    Platform.runLater(() -> {
-                        scene.getStylesheets().remove(stylesheet);
-                        scene.getStylesheets().add(stylesheet);
-                    });
-                } else {
-                    System.err.println("Stylesheet not found: " + stylesheetArg);
-                }
-            }));
-            watcher.setDaemon(true);
-            watcher.setName("stylesheet-watcher");
-            watcher.start();
-        }
-
         stage.setScene(scene);
         stage.show();
+    }
+
+    private static void startWatchingStylesheet(Scene scene, String stylesheetArg,
+                                                URI stylesheetURI, String stylesheet) {
+        System.out.println("Watching stylesheet for changes");
+        Thread watcher = new Thread(new StylesheetWatcher(Paths.get(stylesheetURI), () -> {
+            if (new File(stylesheetArg).exists()) {
+                Platform.runLater(() -> {
+                    scene.getStylesheets().remove(stylesheet);
+                    scene.getStylesheets().add(stylesheet);
+                });
+            } else {
+                System.err.println("Stylesheet not found: " + stylesheetArg);
+            }
+        }));
+        watcher.setDaemon(true);
+        watcher.setName("stylesheet-watcher");
+        watcher.start();
     }
 
     public static <T> T with(T thing, Consumer<T> takeThing) {
