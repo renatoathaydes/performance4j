@@ -55,7 +55,7 @@ public class Performance4j extends Application {
 
         Platform.runLater(() -> {
             try {
-                Node chart = chartType.getChart().getNodeWith("Data", obsData);
+                Node chart = chartType.getChart().getNodeWith("Data", obsData, null);
                 sceneRoot.getChildren().setAll(chart);
                 SnapshotSupport.takeSnapshot(chart, location, resultDequeue);
             } catch (Exception e) {

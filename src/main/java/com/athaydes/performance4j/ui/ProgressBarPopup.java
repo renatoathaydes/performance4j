@@ -1,5 +1,6 @@
 package com.athaydes.performance4j.ui;
 
+import com.athaydes.performance4j.AppState;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,16 +11,14 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.Window;
 
 import static com.athaydes.performance4j.App.with;
 
 final class ProgressBarPopup {
 
-    static void showPopup(Window owner, ProgressBar progressBar, Task<?> task,
-                          String stylesheet) {
+    static void showPopup(AppState appState, ProgressBar progressBar, Task<?> task) {
         Stage dialog = new Stage(StageStyle.UNDECORATED);
-        dialog.initOwner(owner);
+        dialog.initOwner(appState.stage);
 
         Label label = new Label("Please wait");
         label.textProperty().bind(task.messageProperty());
@@ -41,7 +40,7 @@ final class ProgressBarPopup {
         box.setPadding(new Insets(10));
         box.getChildren().addAll(label, progressBar, cancel);
 
-        dialog.setScene(with(new Scene(box), s -> s.getStylesheets().add(stylesheet)));
+        dialog.setScene(with(new Scene(box), s -> s.getStylesheets().add(appState.stylesheet)));
         dialog.centerOnScreen();
         dialog.show();
     }

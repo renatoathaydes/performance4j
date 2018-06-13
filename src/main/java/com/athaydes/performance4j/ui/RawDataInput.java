@@ -1,5 +1,6 @@
 package com.athaydes.performance4j.ui;
 
+import com.athaydes.performance4j.AppState;
 import com.athaydes.performance4j.chart.DataSeries;
 import java.io.StringReader;
 import java.util.Scanner;
@@ -19,17 +20,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.Window;
 
 import static com.athaydes.performance4j.App.with;
 
 public class RawDataInput {
 
-    public static void requestUserRawData(Window owner, ObservableList<DataSeries> data,
-                                          String stylesheet) {
+    public static void requestUserRawData(ObservableList<DataSeries> data,
+                                          AppState appState) {
         Stage dialog = new Stage(StageStyle.UNDECORATED);
         dialog.setTitle("Enter raw data");
-        dialog.initOwner(owner);
+        dialog.initOwner(appState.stage);
 
         TextArea input;
         TextField name;
@@ -66,12 +66,12 @@ public class RawDataInput {
             });
             progressBar.progressProperty().bind(generateData.progressProperty());
             new Thread(generateData).start();
-            ProgressBarPopup.showPopup(owner, progressBar, generateData, stylesheet);
+            ProgressBarPopup.showPopup(appState, progressBar, generateData);
         });
 
         dialog.setScene(with(new Scene(box), s -> {
             s.getStylesheets().addAll(
-                    stylesheet,
+                    appState.stylesheet,
                     "com/athaydes/performance4j/css/data-input.css");
             box.getStyleClass().add("data-input");
         }));

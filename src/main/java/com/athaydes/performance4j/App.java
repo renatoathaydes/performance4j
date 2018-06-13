@@ -44,12 +44,13 @@ public class App extends Application {
 
         final String stylesheet = stylesheetURI == null ? stylesheetArg : stylesheetURI.toString();
         System.out.println("Using stylesheet " + stylesheet);
+        AppState appState = new AppState(stage, stylesheet);
         scene.getStylesheets().add(stylesheet);
 
         boolean watchStylesheet = getParameters().getUnnamed().contains("-w");
 
         if (watchStylesheet && stylesheetURI != null) {
-            startWatchingStylesheet(scene, stylesheetArg, stylesheetURI, stylesheet);
+            startWatchingStylesheet(scene, stylesheetArg, stylesheetURI, appState);
         }
 
         HBox buttonBox = new HBox(4);
@@ -60,7 +61,7 @@ public class App extends Application {
         ObservableList<DataSeries> dataSeries = FXCollections.observableArrayList();
 
         Button addSeries = new Button("Add Series");
-        addSeries.setOnAction(event -> requestUserRawData(stage, dataSeries, stylesheet));
+        addSeries.setOnAction(event -> requestUserRawData(dataSeries, appState));
 
         Button clearData = new Button("Clear");
         clearData.setOnAction(event -> dataSeries.clear());
@@ -70,7 +71,7 @@ public class App extends Application {
         VBox chartBox = new VBox(4);
 
         ChartTypeSelector chartTypeSelector = new ChartTypeSelector(newChart -> {
-            Node chart = newChart.getNodeWith("Data", dataSeries);
+            Node chart = newChart.getNodeWith("Data", dataSeries, appState);
             takeSnapshot.setOnAction(event -> SnapshotSupport.takeSnapshot(stage, chart));
             chartBox.getChildren().setAll(chart);
         });
@@ -87,13 +88,13 @@ public class App extends Application {
     }
 
     private static void startWatchingStylesheet(Scene scene, String stylesheetArg,
-                                                URI stylesheetURI, String stylesheet) {
+                                                URI stylesheetURI, AppState appState) {
         System.out.println("Watching stylesheet for changes");
         Thread watcher = new Thread(new StylesheetWatcher(Paths.get(stylesheetURI), () -> {
             if (new File(stylesheetArg).exists()) {
                 Platform.runLater(() -> {
-                    scene.getStylesheets().remove(stylesheet);
-                    scene.getStylesheets().add(stylesheet);
+                    scene.getStylesheets().remove(appState.stylesheet);
+                    scene.getStylesheets().add(appState.stylesheet);
                 });
             } else {
                 System.err.println("Stylesheet not found: " + stylesheetArg);

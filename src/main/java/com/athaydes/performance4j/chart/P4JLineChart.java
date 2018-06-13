@@ -1,5 +1,6 @@
 package com.athaydes.performance4j.chart;
 
+import com.athaydes.performance4j.AppState;
 import com.athaydes.performance4j.transform.Smooth;
 import com.athaydes.performance4j.transform.Transform;
 import javafx.beans.InvalidationListener;
@@ -14,11 +15,15 @@ public class P4JLineChart implements P4JChart {
     private Transform transform = new Smooth(100);
 
     @Override
-    public Node getNodeWith(String title, ObservableList<DataSeries> data) {
+    public Node getNodeWith(String title, ObservableList<DataSeries> data, AppState appState) {
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Run");
         yAxis.setLabel("Time");
+        if (appState != null) {
+            AxisHelper.makeRenamable(xAxis, appState);
+            AxisHelper.makeRenamable(yAxis, appState);
+        }
 
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(title);
