@@ -1,10 +1,13 @@
 # Colors from http://www.color-hex.com/color-palettes/
 
+* {
+    -fx-accent: #17c0f2;
+}
+
 .root {
     -fx-focus-color: lightgray;
     -fx-faint-focus-color: lightgray;
-    -fx-font-family: "Gill Sans", sans-serif;
-    -fx-font-size: 15px;
+    -fx-selection-bar: #17c0f2;
 }
 
 .main-box {
@@ -16,21 +19,19 @@
 }
 
 .buttons-box {
-    -fx-background-color: #f390f4;
+    -fx-background-color: linear-gradient(#0091d8, #17c0f2);
 }
 
 .button {
-    -fx-background-color: #dbf6f4;
     -fx-background-insets: 0,1,2,3;
     -fx-background-radius: 3,2,2,2;
     -fx-padding: 12 30 12 30;
 }
 
 .button:hover, .choice-box:hover {
-    -fx-background-color: #cce6ff;
+    -fx-font-color: white;
 }
 .choice-box {
-    -fx-background-color: #dbf6f4;
     -fx-padding: 6 5 6 5;
 }
 
@@ -49,19 +50,27 @@
 }
 
 .chart-plot-background {
-    -fx-background-color: #dbf6f4;
+    -fx-background-color: #c5fffb;
 }
 
 .chart-vertical-grid-lines {
-    -fx-stroke: #3278fa;
+    -fx-stroke: #f5f0ff;
 }
 
 .chart-horizontal-grid-lines {
-    -fx-stroke: #3278fa;
+    -fx-stroke: #f5f0ff;
 }
 
 .chart-alternative-row-fill {
-    -fx-fill: #c0b7ff;
+    -fx-fill: white;
     -fx-stroke: transparent;
     -fx-stroke-width: 0;
+}
+
+.text-field {
+    -fx-accent: #17c0f2;
+}
+
+.text-area {
+    -fx-accent: #17c0f2;
 }
