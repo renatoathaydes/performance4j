@@ -3,6 +3,15 @@ package com.athaydes.performance4j;
 import com.athaydes.performance4j.chart.ChartType;
 import com.athaydes.performance4j.chart.DataSeries;
 import com.athaydes.performance4j.ui.SnapshotSupport;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
@@ -12,14 +21,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 public class Performance4j extends Application {
 
@@ -39,7 +40,7 @@ public class Performance4j extends Application {
     }
 
     @SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
-    public static void saveAsChart(ChartType chartType, File location, List<DataSeries> data) {
+    public static void saveAsChart(List<DataSeries> data, File location, ChartType chartType) {
         if (!running.getAndSet(true)) {
             Thread t = new Thread(() -> Application.launch(Performance4j.class));
             t.setDaemon(true);

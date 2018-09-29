@@ -75,10 +75,10 @@ class SmoothSpec extends Specification {
         when: 'Performance4j saves the data in a file'
         def tempDir = File.createTempDir()
         def chartFile = new File(tempDir, 'my-chart.png')
-        Performance4j.saveAsChart(ChartType.LINE_CHART, chartFile, [
+        Performance4j.saveAsChart([
                 new DataSeries('hello', randomData()),
                 new DataSeries('other', randomData()),
-        ])
+        ], chartFile, ChartType.LINE_CHART)
 
         then: 'no error should occur'
         noExceptionThrown()
