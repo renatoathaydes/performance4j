@@ -1,13 +1,14 @@
 package com.athaydes.performance4j.ui;
 
-import java.io.File;
-import java.util.ArrayDeque;
-import java.util.Queue;
+import com.athaydes.performance4j.chart.Result;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+
 import javax.imageio.ImageIO;
+import java.io.File;
+import java.util.function.Consumer;
 
 public final class SnapshotSupport {
 
@@ -21,24 +22,21 @@ public final class SnapshotSupport {
         chooser.setTitle("Select a location to save the file");
         File file = chooser.showSaveDialog(owner);
         if (file != null) {
-            Queue snapshotResult = new ArrayDeque(1);
-            takeSnapshot(node, file, snapshotResult);
-            // TODO check result
+            takeSnapshot(node, file, (result) -> {
+                // TODO check result
+            });
         }
     }
 
     @SuppressWarnings("unchecked")
-    public static void takeSnapshot(Node node, File file, Queue resultDequeue) {
+    public static void takeSnapshot(Node node, File file, Consumer<Result<Boolean>> resultAction) {
         String extension = extensionOf(file.getName());
         node.snapshot(snapshot -> {
             try {
                 ImageIO.write(SwingFXUtils.fromFXImage(snapshot.getImage(), null), extension, file);
+                resultAction.accept(new Result<>(true));
             } catch (Exception e) {
-                resultDequeue.offer(e);
-            } finally {
-                if (resultDequeue != null) {
-                    resultDequeue.offer(true);
-                }
+                resultAction.accept(new Result<>(e));
             }
             return null;
         }, null, null);

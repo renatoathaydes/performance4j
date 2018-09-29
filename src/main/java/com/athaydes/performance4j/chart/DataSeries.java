@@ -1,5 +1,7 @@
 package com.athaydes.performance4j.chart;
 
+import java.util.stream.LongStream;
+
 public final class DataSeries {
 
     private final String name;
@@ -16,6 +18,10 @@ public final class DataSeries {
 
     public long[] getData() {
         return data;
+    }
+
+    public DataSeriesSummary getSummary() {
+        return new DataSeriesSummary(name, LongStream.of(data).summaryStatistics());
     }
 
 }

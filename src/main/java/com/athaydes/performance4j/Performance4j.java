@@ -2,6 +2,9 @@ package com.athaydes.performance4j;
 
 import com.athaydes.performance4j.chart.ChartType;
 import com.athaydes.performance4j.chart.DataSeries;
+import com.athaydes.performance4j.chart.DataSeriesSummary;
+import com.athaydes.performance4j.chart.P4JBarChart;
+import com.athaydes.performance4j.chart.Result;
 import com.athaydes.performance4j.ui.SnapshotSupport;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -14,6 +17,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.Optional;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CountDownLatch;
@@ -21,6 +25,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 public class Performance4j extends Application {
 
@@ -39,46 +44,76 @@ public class Performance4j extends Application {
         startLatch.countDown();
     }
 
-    @SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
+    public static void saveAsChart(LongSummaryStatistics summary, File location) {
+        saveAsChart(new DataSeriesSummary("Series", summary), location);
+    }
+
+    public static void saveAsChart(DataSeriesSummary summary, File location) {
+        ensureJavaFXEngineStarted();
+        ensureParentFileExists(location);
+
+        withJavaFXThread((callback) -> {
+            Node chart = new P4JBarChart().getNodeWith("Data", summary);
+            sceneRoot.getChildren().setAll(chart);
+            SnapshotSupport.takeSnapshot(chart, location, callback);
+        });
+    }
+
     public static void saveAsChart(List<DataSeries> data, File location, ChartType chartType) {
+        ensureJavaFXEngineStarted();
+        ensureParentFileExists(location);
+
+        withJavaFXThread((callback) -> {
+            ObservableList<DataSeries> obsData = FXCollections.observableList(data);
+            Node chart = chartType.getChart().getNodeWith("Data", obsData, null);
+            sceneRoot.getChildren().setAll(chart);
+            SnapshotSupport.takeSnapshot(chart, location, callback);
+        });
+    }
+
+    private static void ensureParentFileExists(File location) {
+        Optional.ofNullable(location.getAbsoluteFile().getParentFile()).ifPresent(dir -> {
+            boolean success = dir.isDirectory() || dir.mkdirs();
+            if (!success) {
+                throw new RuntimeException("Cannot create parent directory for chart file: " + dir);
+            }
+        });
+    }
+
+    private static void withJavaFXThread(Consumer<Consumer<Result<Boolean>>> onFinished) {
+        BlockingDeque<Result<Boolean>> resultDequeue = new LinkedBlockingDeque<>(1);
+
+        Platform.runLater(() -> onFinished.accept(resultDequeue::offer));
+
+        Result<Boolean> result;
+        try {
+            result = resultDequeue.poll(10, TimeUnit.SECONDS);
+            if (result == null) {
+                throw new RuntimeException("Timeout while waiting for action to run");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        result.use((success) -> success, (error) -> {
+            throw new RuntimeException(error);
+        });
+    }
+
+    private static void ensureJavaFXEngineStarted() {
         if (!running.getAndSet(true)) {
             Thread t = new Thread(() -> Application.launch(Performance4j.class));
             t.setDaemon(true);
             t.start();
         }
 
-        waitFor(startLatch);
-
-        Optional.ofNullable(location.getAbsoluteFile().getParentFile()).ifPresent(File::mkdirs);
-        ObservableList<DataSeries> obsData = FXCollections.observableList(data);
-
-        BlockingDeque resultDequeue = new LinkedBlockingDeque(1);
-
-        Platform.runLater(() -> {
-            try {
-                Node chart = chartType.getChart().getNodeWith("Data", obsData, null);
-                sceneRoot.getChildren().setAll(chart);
-                SnapshotSupport.takeSnapshot(chart, location, resultDequeue);
-            } catch (Exception e) {
-                resultDequeue.offer(e);
-            }
-        });
-
-        Object result;
-        try {
-            result = resultDequeue.poll(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        if (result instanceof Throwable) {
-            throw new RuntimeException((Throwable) result);
-        }
+        waitForStartLatch();
     }
 
-    private static void waitFor(CountDownLatch latch) {
+    private static void waitForStartLatch() {
         boolean ok;
         try {
-            ok = latch.await(500, TimeUnit.SECONDS);
+            ok = startLatch.await(500, TimeUnit.SECONDS);
             if (!ok) {
                 throw new TimeoutException();
             }

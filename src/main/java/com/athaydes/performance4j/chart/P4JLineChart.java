@@ -44,10 +44,13 @@ public class P4JLineChart implements P4JChart {
         };
 
         rebuildSeries.run();
-        data.addListener((InvalidationListener) observable -> {
-            lineChart.getData().clear();
-            rebuildSeries.run();
-        });
+
+        if (appState != null) {
+            data.addListener((InvalidationListener) observable -> {
+                lineChart.getData().clear();
+                rebuildSeries.run();
+            });
+        }
 
         return lineChart;
     }
