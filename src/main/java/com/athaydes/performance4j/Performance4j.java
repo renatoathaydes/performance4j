@@ -27,6 +27,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import static com.athaydes.performance4j.ui.SnapshotSupport.extensionOf;
+
 public class Performance4j extends Application {
 
     private static final AtomicBoolean running = new AtomicBoolean(false);
@@ -49,10 +51,7 @@ public class Performance4j extends Application {
     }
 
     public static void saveAsChart(DataSeriesSummary summary, File location) {
-        ensureJavaFXEngineStarted();
-        ensureParentFileExists(location);
-
-        withJavaFXThread((callback) -> {
+        saveTo(location, (callback) -> {
             Node chart = new P4JBarChart().getNodeWith("Data", summary);
             sceneRoot.getChildren().setAll(chart);
             SnapshotSupport.takeSnapshot(chart, location, callback);
@@ -60,15 +59,23 @@ public class Performance4j extends Application {
     }
 
     public static void saveAsChart(List<DataSeries> data, File location, ChartType chartType) {
-        ensureJavaFXEngineStarted();
-        ensureParentFileExists(location);
-
-        withJavaFXThread((callback) -> {
+        saveTo(location, (callback) -> {
             ObservableList<DataSeries> obsData = FXCollections.observableList(data);
             Node chart = chartType.getChart().getNodeWith("Data", obsData, null);
             sceneRoot.getChildren().setAll(chart);
             SnapshotSupport.takeSnapshot(chart, location, callback);
         });
+    }
+
+    private static void saveTo(File location, Consumer<Consumer<Result<Boolean>>> onFinished) {
+        ensureJavaFXEngineStarted();
+        ensureParentFileExists(location);
+
+        boolean success = withJavaFXThread(onFinished);
+        if (!success) {
+            throw new RuntimeException("Unable to write image in the given format: " +
+                    extensionOf(location.getName()));
+        }
     }
 
     private static void ensureParentFileExists(File location) {
@@ -80,14 +87,14 @@ public class Performance4j extends Application {
         });
     }
 
-    private static void withJavaFXThread(Consumer<Consumer<Result<Boolean>>> onFinished) {
-        BlockingDeque<Result<Boolean>> resultDequeue = new LinkedBlockingDeque<>(1);
+    private static <T> T withJavaFXThread(Consumer<Consumer<Result<T>>> onFinished) {
+        BlockingDeque<Result<T>> resultDequeue = new LinkedBlockingDeque<>(1);
 
         Platform.runLater(() -> onFinished.accept(resultDequeue::offer));
 
-        Result<Boolean> result;
+        Result<T> result;
         try {
-            result = resultDequeue.poll(10, TimeUnit.SECONDS);
+            result = resultDequeue.poll(15, TimeUnit.SECONDS);
             if (result == null) {
                 throw new RuntimeException("Timeout while waiting for action to run");
             }
@@ -95,7 +102,7 @@ public class Performance4j extends Application {
             throw new RuntimeException(e);
         }
 
-        result.use((success) -> success, (error) -> {
+        return result.use((success) -> success, (error) -> {
             throw new RuntimeException(error);
         });
     }

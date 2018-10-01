@@ -23,7 +23,12 @@ public final class SnapshotSupport {
         File file = chooser.showSaveDialog(owner);
         if (file != null) {
             takeSnapshot(node, file, (result) -> {
-                // TODO check result
+                // TODO show error in UI
+                result.use(sucess -> {
+                    if (!sucess) {
+                        System.err.println("Format unsupported, could not save image");
+                    }
+                }, Throwable::printStackTrace);
             });
         }
     }
@@ -33,8 +38,8 @@ public final class SnapshotSupport {
         String extension = extensionOf(file.getName());
         node.snapshot(snapshot -> {
             try {
-                ImageIO.write(SwingFXUtils.fromFXImage(snapshot.getImage(), null), extension, file);
-                resultAction.accept(new Result<>(true));
+                boolean success = ImageIO.write(SwingFXUtils.fromFXImage(snapshot.getImage(), null), extension, file);
+                resultAction.accept(new Result<>(success));
             } catch (Exception e) {
                 resultAction.accept(new Result<>(e));
             }
@@ -42,7 +47,7 @@ public final class SnapshotSupport {
         }, null, null);
     }
 
-    private static String extensionOf(String name) {
+    public static String extensionOf(String name) {
         int index = name.lastIndexOf('.');
         if (index < 0 || index == name.length() - 1) {
             return "png";
