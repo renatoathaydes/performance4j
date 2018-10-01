@@ -16,8 +16,8 @@ class SmoothSpec extends Specification {
         then: 'the result should be correctly smoothened data'
         result.data == toLongArray(smoothenedData)
 
-        and: 'the name should have the (smooth) suffix'
-        result.name == 'origin (smooth)'
+        and: 'the name should have the (smooth) suffix if the smoothen function ran'
+        result.data.size() < data.size() ? result.name == 'origin (smooth)' : result.name == 'origin'
 
         where:
         data                            | maxPoints | smoothenedData
